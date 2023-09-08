@@ -6,7 +6,7 @@ Images are downscaled, however the system is a little wacky and I intend to make
 # Commands
 ## image
 + arguments: (string) filename (including .png on end etc)
-+ aliases: imagefile
++ aliases: img
 + description: Spawns image from local folder on server, needs to be inside of Exiled/Configs/Plugins/ImageAPI/image/
 ## imageurl
 + arguments: (string) url
