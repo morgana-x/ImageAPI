@@ -138,7 +138,7 @@ namespace ImageAPI
                 pixelPrimitive.Collidable = collide;
                 //primitives.Add(pixelPrimitive);
                 spawnedPrimitives.Add(pixelPrimitive);
-                yield return Timing.WaitForSeconds(0.01f);
+                yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageSpawnPixelDelay);
             }
 
         }
