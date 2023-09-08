@@ -156,10 +156,13 @@ namespace ImageAPI
             }
             spawnedPrimitives.Clear();
         }
-
+        private string UrlToFileName(string dangerousURL)
+        {
+            return dangerousURL.Replace("http", string.Empty).Replace("www.", string.Empty).Replace(".", string.Empty).Replace("/", string.Empty).Replace(":", string.Empty).Replace(@"\", string.Empty);
+        }
         public void downloadImage(string url, Action<string> callBack = null) // https://stackoverflow.com/questions/24797485/how-to-download-image-from-url :(
         {
-            string fileName = url.Replace(".", string.Empty);
+            string fileName = UrlToFileName(url);
             string imgPath = getImagePath(fileName) + ".png";
             if (File.Exists(imgPath))
             {
@@ -187,7 +190,7 @@ namespace ImageAPI
         }
         public void downloadImagePosition(string url, Vector3 pos, Transform rotationTransform = null, Action<string, Vector3, Transform> callBack = null) // https://stackoverflow.com/questions/24797485/how-to-download-image-from-url :(
         {
-            string fileName = url.Replace(".", string.Empty);
+            string fileName = UrlToFileName(url);
             string imgPath = getImagePath(fileName) + ".png";
             if (File.Exists(imgPath))
             {
