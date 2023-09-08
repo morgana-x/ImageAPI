@@ -2,8 +2,7 @@
 An work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
 + This is not fully optimised and may lag players' games!!!!!!!!!!!
 + Images are currently spawned pixel by pixel with a certain delay.
-+ Images are downscaled, however the system is a little wacky and I intend to make it use something like MaxPixels rather than the wacko thing that is there
-
+  
 # Commands
 ## image
 + arguments: (string) filename (including .png on end etc)
