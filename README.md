@@ -7,11 +7,11 @@ A work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
 ## image
 + arguments: (string) filename (including .png on end etc)
 + aliases: img
-+ description: Spawns image from local folder on server, needs to be inside of Exiled/Configs/Plugins/ImageAPI/image/
++ description: Spawns image from local folder on server where you are looking, needs to be inside of Exiled/Configs/Plugins/ImageAPI/image/
 ## imageurl
 + arguments: (string) url
 + aliases: imgurl
-+ description: Spawns image from a url, and caches the result in Exiled/Configs/Plugins/ImageAPI/image/
++ description: Spawns image from a url where you are looking, and caches the result in Exiled/Configs/Plugins/ImageAPI/image/
 ## imageclear
 + arguments: none
 + aliases: imgclear
