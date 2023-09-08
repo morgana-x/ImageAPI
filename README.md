@@ -1,5 +1,5 @@
 # ImageAPI
-An work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
+A work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
 + This is not fully optimised and may lag players' games (on connection when the object is already spawned or if you spawned too many images)!!!!!!!!!!!
 + Images are spawned pixel by pixel with a certain delay to avoid freezing and crashing players' games
   
