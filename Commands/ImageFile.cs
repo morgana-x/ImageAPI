@@ -31,7 +31,7 @@ namespace ImageAPI.Commands
                 response = "Please provide an image file name.\nYour images are located in " + Plugin.Instance._imageApi.getImageFolder();
                 return false;
             }
-            Plugin.Instance._imageApi.spawnImage(imageFile, player.Position + (player.CameraTransform.forward * 2), maxSize: Plugin.Instance.Config.ImageCompressionLevel, rotationTransform:player.CameraTransform);
+            Plugin.Instance._imageApi.spawnImage(imageFile, player.Position + (player.CameraTransform.forward * 2),  rotationTransform:player.CameraTransform);
             Log.Debug("Spawned image \"" + imageFile + "\" for " + player.DisplayNickname);
             response = "Spawning image";
             return true;

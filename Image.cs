@@ -56,8 +56,28 @@ namespace ImageAPI
 
             return ColorUtility.TryParseHtmlString(colorText, out color) ? color : UnityEngine.Color.magenta * 3f;
         }
-
-        public void spawnImage(string file, Vector3 Location, Transform rotationTransform = null, float pixelSize = 0.1f, bool collide = false, int maxSize = 15)
+        SizeF ConstrainVerbose(int imageWidth, int imageHeight, int maxWidth, int maxHeight) //https://stackoverflow.com/questions/5222711/image-resize-in-c-sharp-algorith-to-determine-resize-dimensions-height-and-wi
+        {
+            // Coalculate the aspect ratios of the image and bounding box
+            var maxAspect = (float)maxWidth / (float)maxHeight;
+            var aspect = (float)imageWidth / (float)imageHeight;
+            // Bounding box aspect is narrower
+            if (maxAspect <= aspect && imageWidth > maxWidth)
+            {
+                // Use the width bound and calculate the height
+                return new SizeF(maxWidth, Math.Min(maxHeight, maxWidth / aspect));
+            }
+            else if (maxAspect > aspect && imageHeight > maxHeight)
+            {
+                // Use the height bound and calculate the width
+                return new SizeF(Math.Min(maxWidth, maxHeight * aspect), maxHeight);
+            }
+            else
+            {
+                return new SizeF(imageWidth, imageHeight);
+            }
+        }
+        public void spawnImage(string file, Vector3 Location, Transform rotationTransform = null, float pixelSize = 0.1f, bool collide = false, int maxSize = 255)
         {
             Log.Debug( "Spawning " + file);
             string imageFolder = getImageFolder();
@@ -80,24 +100,27 @@ namespace ImageAPI
                 Log.Warn("Null image! Aborting spawning.");
                 return;
             }
-            int imgSize = img.Width * img.Height;
-            if ((imgSize) > maxSize) // Todo: fix rescaling system
+            /*float imgSize = img.Width * img.Height;
+            if ((imgSize) > (Plugin.Instance.Config.ImageMaxWidth * Plugin.Instance.Config.ImageMaxHeight)) // Todo: fix rescaling system
             {
                 Log.Debug("Image too large (" + imgSize.ToString() + "/" + maxSize.ToString() +  "), compressing...");
-                double scaleDown =  imgSize / maxSize;
+                float scaleDown = (float)maxSize / (float)imgSize;
                 Log.Debug("Scaledown: " + scaleDown.ToString());
                 Log.Debug("Image width:" + img.Width);
-                int newWidth = (int)(scaleDown / img.Width); //( scaleDown / img.Width); // REMEMBER TO REVERT THIS LATER
+                float newWidth = ((maxSize / img.Height) / (float)img.Width); //( scaleDown / img.Width); // REMEMBER TO REVERT THIS LATER
                 Log.Debug("New Image width: " + newWidth.ToString());
-                
-                int newHeight = (int)(scaleDown / img.Height);
+                Log.Debug("Image height:" + img.Height);
+                float newHeight = ((maxSize ) / (float)img.Height);
                 Log.Debug("New Image height: " + newWidth.ToString());
                 Log.Debug("New image size: " +  (newWidth * newHeight).ToString());
                 //Log.Warn(newHeight);
                 //Log.Warn(newWidth.ToString() + " / " + newHeight.ToString());
-                img = new Bitmap(img, newHeight, newWidth);
-            }
-            //img.RotateFlip(RotateFlipType.Rotate180FlipXY);
+                Size newSize = ResizeFit(img.Size, new Size(Plugin.Instance.Config.ImageMaxWidth, Plugin.Instance.Config.ImageMaxHeight));
+                img = new Bitmap(img, newSize); // (int)newHeight, (int)newWidth);
+            }*/
+            Size newSize = ConstrainVerbose(img.Width, img.Height, Plugin.Instance.Config.ImageMaxWidth, Plugin.Instance.Config.ImageMaxHeight).ToSize();
+            Log.Debug("New size: " + newSize.ToString());
+            img = new Bitmap(img, newSize);
             for (int x = 0; x < img.Width; x++)
             {
                 for (int y = 0; y < img.Height; y++)
