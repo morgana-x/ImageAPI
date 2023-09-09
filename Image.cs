@@ -13,6 +13,7 @@ using MEC;
 using System.Drawing.Imaging;
 using System.Net;
 using System.Security.Policy;
+using Mirror;
 
 namespace ImageAPI
 {
@@ -28,7 +29,26 @@ namespace ImageAPI
         {
             return getImageFolder() + @"\" + file;
         }
-
+        private IEnumerator<float> playerCullPrimitives() 
+        {
+            while (true)
+            {
+                foreach (Player pl in Player.List)
+                {
+                    foreach (Primitive b in spawnedPrimitives)
+                    {
+                        
+                        if (Vector3.Distance(pl.Position, b.Position) > 100)
+                        {
+                            //b.UnSpawn();
+                            //NetworkServer.UnSpawn(b, pl.NetworkIdentity);
+                        }
+                        //NetworkServer.Spawn(b.Base.gameObject, );
+                    }
+                }
+                yield return Timing.WaitForSeconds(3f);
+            }
+        }
         public static UnityEngine.Color GetColorFromString(string colorText)
         {
             UnityEngine.Color color = new UnityEngine.Color(-1f, -1f, -1f);

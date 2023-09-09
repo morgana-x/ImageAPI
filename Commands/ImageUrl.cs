@@ -24,7 +24,7 @@ namespace ImageAPI.Commands
 
         public void spawnImageDownloaded(string ImageFile, Vector3 Position, Transform rotationtransform = null)
         {
-            Plugin.Instance._imageApi.spawnImage(ImageFile, Position, rotationTransform: rotationtransform);
+            Plugin.Instance._imageApi.spawnImage(ImageFile, Position, rotationTransform: rotationtransform, pixelSize: Plugin.Instance.Config.ImagepixelSize);
             Log.Debug("spawned " + ImageFile);
         }
         protected override bool ExecuteParent(ArraySegment<string> arguments, ICommandSender sender, out string response)
