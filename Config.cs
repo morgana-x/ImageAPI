@@ -18,10 +18,13 @@ namespace ImageAPI
         public int ImageMaxHeight { get; set; } = 40;
 
         [Description("Size of the pixels for images")]
-        public float ImagepixelSize { get; set; } = 0.1f;
+        public float ImagepixelSize { get; set; } = 0.05f;
 
         [Description("Delay between each pixel spawning")]
         public float ImageSpawnPixelDelay { get; set; } = 0.01f;
+
+        [Description("Max distance before images are hidden from player for performance")]
+        public float ImageCullingDistance = 10;
 
         /*public Dictionary<string, KeyValuePair<Vector3, Vector3>> SavedImageSpawns { get; set;} = new Dictionary<string, KeyValuePair<Vector3, Transform>>()
         {

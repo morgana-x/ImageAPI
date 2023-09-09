@@ -14,12 +14,14 @@ using System.Drawing.Imaging;
 using System.Net;
 using System.Security.Policy;
 using Mirror;
+using System.Reflection;
 
 namespace ImageAPI
 {
     public class Image
     {
         public List<Primitive> spawnedPrimitives = new List<Primitive>();
+        public Dictionary<Vector3, List<Primitive>> spawnedImages = new Dictionary<Vector3, List<Primitive>>();
         public List<CoroutineHandle> imageSpawningCoroutines = new List<CoroutineHandle>();
         public string getImageFolder()
         {
@@ -29,21 +31,37 @@ namespace ImageAPI
         {
             return getImageFolder() + @"\" + file;
         }
+        public void hidePrimitives(Player pl, List<Primitive> primitives)
+        {
+            NetworkConnection connection = pl.Connection;
+            foreach (Primitive p in primitives)
+            {
+                connection.Send(new ObjectDestroyMessage
+                { netId = p.Base.netIdentity.netId });
+            }
+        }
+        public IEnumerator<float> showPrimitives(Player pl, List<Primitive> primitives)
+        {
+            NetworkConnection connection = pl.Connection;
+            foreach (Primitive p in primitives)
+            {
+                Server.SendSpawnMessage.Invoke(null, new object[] { p.Base.netIdentity, connection });
+                yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageSpawnPixelDelay);
+            }
+        }
         private IEnumerator<float> playerCullPrimitives() 
         {
             while (true)
             {
                 foreach (Player pl in Player.List)
                 {
-                    foreach (Primitive b in spawnedPrimitives)
+                    foreach (var b in spawnedImages)
                     {
-                        
-                        if (Vector3.Distance(pl.Position, b.Position) > 100)
+                        if (Vector3.Distance(pl.Position, b.Key) > Plugin.Instance.Config.ImageCullingDistance)
                         {
-                            //b.UnSpawn();
-                            //NetworkServer.UnSpawn(b, pl.NetworkIdentity);
+                            hidePrimitives(pl, b.Value);
                         }
-                        //NetworkServer.Spawn(b.Base.gameObject, );
+                        showPrimitives(pl, b.Value);
                     }
                 }
                 yield return Timing.WaitForSeconds(3f);

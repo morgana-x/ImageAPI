@@ -2,6 +2,7 @@
 using Exiled.API.Features;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,10 +26,16 @@ namespace ImageAPI.Commands
         {
             Exiled.API.Features.Player player = Exiled.API.Features.Player.Get(sender);
             string imageFile = arguments.ToList()[0];
-            Log.Debug(imageFile);
-            if (imageFile == null) 
+            string imagePath = Plugin.Instance._imageApi.getImagePath(imageFile);
+            if (imageFile == null || imageFile == string.Empty || imageFile == "") 
             {
                 response = "Please provide an image file name.\nYour images are located in " + Plugin.Instance._imageApi.getImageFolder();
+                return false;
+            }
+            if (!File.Exists(imagePath))
+            {
+                Log.Debug(imagePath + " does not exist!");
+                response = "Image not found at \"" + imagePath + "\"";
                 return false;
             }
             Plugin.Instance._imageApi.spawnImage(imageFile, player.Position + (player.CameraTransform.forward * 2),  rotationTransform:player.CameraTransform, pixelSize: Plugin.Instance.Config.ImagepixelSize);

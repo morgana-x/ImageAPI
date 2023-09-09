@@ -32,9 +32,9 @@ namespace ImageAPI.Commands
             Exiled.API.Features.Player player = Exiled.API.Features.Player.Get(sender);
             //string imageFile = "neko.png";
             string url = arguments.ToList()[0];
-            if (url == null)
+            if (url == null || url == string.Empty || url == "")
             {
-                response = "Please provide a valid url";
+                response = "Please provide a valid ur.";
                 return false;
             }
             Plugin.Instance._imageApi.downloadImagePosition(url, player.Position + (player.CameraTransform.forward * 2), rotationTransform:player.CameraTransform, callBack: spawnImageDownloaded);
