@@ -5,7 +5,6 @@ A work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
 
 # Todo
 + Add culling system for each player
-+ Add pixel size to config
 + Allow for images to be spawned on round start from config
 + Support for creating images with bullet holes (maybe)
 # Commands
