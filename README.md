@@ -1,12 +1,18 @@
 # ImageAPI
 A work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
-+ This is not fully optimised and may lag players' games (on connection when the object is already spawned or if you spawned too many images)!!!!!!!!!!!
-+ Images are spawned pixel by pixel with a certain delay to avoid freezing and crashing players' games
+## This is not fully optimised and may lag the server unless you adjust configs to severely degrade quality of images, and increase the delay of spawning them etc
+
+# Features
++ Image downscaling
++ Culling
++ Spawning and despawning images pixel by pixel (or a few pixels at a time)
++ Rotation support
++ Unoptimised code :trolling:
 
 # Todo
-+ Add culling system for each player
 + Allow for images to be spawned on round start from config
 + Support for creating images with bullet holes (maybe)
++ 
 # Commands
 ## image
 + arguments: (string) filename (including .png on end etc)
