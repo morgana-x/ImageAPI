@@ -4,6 +4,7 @@ A work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
 ## This is more of a for fun plugin rather than a practical and applicable plugin on your server, maybe a different version using decals could be made which will decrease the amount of lag on client and server (Except it will probably be monochrome)
 # Features
 + Image downscaling
++ Downloading from URLs
 + Culling
 + Spawning and despawning images pixel by pixel (or a few pixels at a time)
 + Rotation support
