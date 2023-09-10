@@ -18,11 +18,47 @@ using System.Reflection;
 
 namespace ImageAPI
 {
-    public class Image
+    public class SpawnedImage
+    {
+        public Vector3 Position { get; set; } = Vector3.zero;
+        public List<Primitive> Primitives = new List<Primitive>();
+        public Room room { get; set; } = null;
+
+        public string Image { get; set; } = string.Empty;
+
+        public string Id { get; set; } = string.Empty;
+
+        public bool shouldCull(Player pl)
+        {
+            if ( (room != null)  && (pl.Zone != room.Zone) )
+            {
+                return true;
+            }
+            if (Vector3.Distance(pl.Position, Position) > Plugin.Instance.Config.ImageCullingDistance)
+            {
+                return true;
+            }
+            return false;
+        }
+        public SpawnedImage(Vector3 position, string image, List<Primitive> primitives)
+        {
+            Position = position;
+            Primitives = primitives;
+            Image = image;
+            Id = image + Position.ToString();
+        }
+    }
+    public class ImageAPI // You ready to see the worst code of your life!!!???
     {
         public List<Primitive> spawnedPrimitives = new List<Primitive>();
-        public Dictionary<Vector3, List<Primitive>> spawnedImages = new Dictionary<Vector3, List<Primitive>>();
+        public List<SpawnedImage> spawnedImages = new List<SpawnedImage>();
         public List<CoroutineHandle> imageSpawningCoroutines = new List<CoroutineHandle>();
+        public CoroutineHandle cullingCoroutineHandle;
+        public CoroutineHandle cullingDoCoroutineHandle;
+        public Dictionary<Player, List<SpawnedImage>> playerVisibleImages = new Dictionary<Player, List<SpawnedImage>>();
+        public Dictionary<Player, CoroutineHandle> playerCullingHandle = new Dictionary<Player, CoroutineHandle>();
+        public Dictionary<Player, List<Primitive>> playerShowPrimitiveQueue = new Dictionary<Player, List<Primitive>>();
+        public Dictionary<Player, List<Primitive>> playerHidePrimitiveQueue = new Dictionary<Player, List<Primitive>>();
         public string getImageFolder()
         {
             return Plugin.Instance.ConfigPath.Replace("7777.yml", string.Empty) + @"\image";
@@ -31,7 +67,7 @@ namespace ImageAPI
         {
             return getImageFolder() + @"\" + file;
         }
-        public void hidePrimitives(Player pl, List<Primitive> primitives)
+        /*public void hidePrimitives(Player pl, List<Primitive> primitives)
         {
             NetworkConnection connection = pl.Connection;
             foreach (Primitive p in primitives)
@@ -39,32 +75,148 @@ namespace ImageAPI
                 connection.Send(new ObjectDestroyMessage
                 { netId = p.Base.netIdentity.netId });
             }
+        }*/
+        public void hidePrimitive(Player pl, Primitive primitive)
+        {
+            pl.Connection.Send(new ObjectDestroyMessage
+            { netId = primitive.Base.netIdentity.netId });
         }
-        public IEnumerator<float> showPrimitives(Player pl, List<Primitive> primitives)
+        public void showPrimitive(Player player, Primitive primitive)
+        {
+            Server.SendSpawnMessage.Invoke(null, new object[] { primitive.Base.netIdentity, player.Connection });
+        }
+        //public IEnumerator<float> showPrimitives(Player pl, List<Primitive> primitives)
+        /*public void showPrimitives(Player pl, List<Primitive> primitives)
         {
             NetworkConnection connection = pl.Connection;
             foreach (Primitive p in primitives)
             {
                 Server.SendSpawnMessage.Invoke(null, new object[] { p.Base.netIdentity, connection });
-                yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageSpawnPixelDelay);
+               // yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageSpawnPixelDelay);
             }
-        }
+        }*/
+        /*public bool isCulled(Player pl, SpawnedImage img)
+        {
+            if (!playerVisibleImages.ContainsKey(pl))
+            {
+                return true;
+            }
+            List<SpawnedImage> visibleImages = playerVisibleImages[pl];
+            if (visibleImages.Contains(img))
+            {
+                return false;
+            }
+            return true;
+        }*/
         private IEnumerator<float> playerCullPrimitives() 
         {
             while (true)
             {
                 foreach (Player pl in Player.List)
                 {
-                    foreach (var b in spawnedImages)
+                    if (!playerVisibleImages.ContainsKey(pl))
                     {
-                        if (Vector3.Distance(pl.Position, b.Key) > Plugin.Instance.Config.ImageCullingDistance)
+                        playerVisibleImages.Add(pl, new List<SpawnedImage>());
+                    }
+                    if (!playerShowPrimitiveQueue.ContainsKey(pl))
+                    {
+                        playerShowPrimitiveQueue.Add(pl, new List<Primitive>());
+                    }
+                    if (!playerShowPrimitiveQueue.ContainsKey(pl))
+                    {
+                        playerShowPrimitiveQueue.Add(pl, new List<Primitive>());
+                    }
+                    foreach (SpawnedImage b in spawnedImages)
+                    {
+                        if ( (( playerVisibleImages[pl].Contains(b))) && b.shouldCull(pl))
                         {
-                            hidePrimitives(pl, b.Value);
+                            /*if (playerCullingHandle.ContainsKey(pl))
+                            {
+                                Timing.KillCoroutines(playerCullingHandle[pl]);
+                                playerCullingHandle.Remove(pl);
+                            }*/
+                           // hidePrimitives(pl, b.Primitives);
+                            if ( playerVisibleImages[pl].Contains(b))
+                            {
+                                playerVisibleImages[pl].Remove(b);
+                            }
+                            playerHidePrimitiveQueue[pl].AddRange(b.Primitives);
+                            playerShowPrimitiveQueue[pl] = playerShowPrimitiveQueue[pl].Except(b.Primitives).ToList();
+
+                            Log.Debug("Culling " + b.Id + " for " + pl.DisplayNickname);
+                            continue;
                         }
-                        showPrimitives(pl, b.Value);
+
+                        /*CoroutineHandle cullhandle = Timing.RunCoroutine(showPrimitives(pl, b.Primitives));
+                        if (!playerCullingHandle.ContainsKey(pl))
+                        {
+                            playerCullingHandle.Add(pl, cullhandle);
+                        }
+                        else
+                        {
+                            Timing.KillCoroutines(playerCullingHandle[pl]);
+                            playerCullingHandle[pl] = cullhandle;
+                        }*/
+                        if (playerVisibleImages[pl].Contains(b))
+                        {
+                            continue;
+                        }
+                        if (b.shouldCull(pl))
+                        {
+                            continue;
+                        }
+                        //showPrimitives(pl, b.Primitives);
+                  
+                        playerShowPrimitiveQueue[pl].AddRange(b.Primitives);
+                        playerHidePrimitiveQueue[pl] = playerHidePrimitiveQueue[pl].Except(b.Primitives).ToList();
+                        Log.Debug("Showing " + b.Id + " for " + pl.DisplayNickname);
+                        playerVisibleImages[pl].Add(b);
                     }
                 }
-                yield return Timing.WaitForSeconds(3f);
+                yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageCullingDelay);
+            }
+        }
+        private IEnumerator<float> playerPrimitiveVisiblity()
+        {
+            while (true)
+            {
+                foreach (Player pl in Player.List)
+                {
+                    if (!playerHidePrimitiveQueue.ContainsKey(pl))
+                    {
+                        playerHidePrimitiveQueue.Add(pl, new List<Primitive>());
+                    }
+                    if (!playerShowPrimitiveQueue.ContainsKey(pl))
+                    {
+                        playerShowPrimitiveQueue.Add(pl, new List<Primitive>());
+                    }
+
+                    if (playerShowPrimitiveQueue[pl].Count > 0)
+                    {
+                        for (int i = 1; i <= Plugin.Instance.Config.ImageShowPixelAmount; i++)
+                        {
+                            if (i > playerShowPrimitiveQueue[pl].Count)
+                                break;
+                            Primitive showPrimitiveThing = playerShowPrimitiveQueue[pl].FirstOrDefault();
+                            showPrimitive(pl, showPrimitiveThing);
+                            playerShowPrimitiveQueue[pl].Remove(showPrimitiveThing);
+                        }
+                    }
+                    if (playerHidePrimitiveQueue[pl].Count >0)
+                    {
+                        for (int i = 1; i <= Plugin.Instance.Config.ImageCullPixelAmount; i++)
+                        {
+                            if (i > playerHidePrimitiveQueue[pl].Count)
+                                break;
+                            Primitive hidePrimitiveThing = playerHidePrimitiveQueue[pl].FirstOrDefault();
+                            hidePrimitive(pl, hidePrimitiveThing);
+                            playerHidePrimitiveQueue[pl].Remove(hidePrimitiveThing);
+                        }
+                    }
+
+                
+                }
+                yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageSpawnPixelDelay);
             }
         }
         public static UnityEngine.Color GetColorFromString(string colorText)
@@ -187,21 +339,50 @@ namespace ImageAPI
         }
         private IEnumerator<float> spawnImagePrimitives(Dictionary<Vector3, UnityEngine.Color> pixels, Vector3 Location, Vector3 Rotation, float pixelSize = 0.1f, bool collide = false)
         {
-            //List<Primitive> primitives = new List<Primitive>();
+            List<Primitive> primitives = new List<Primitive>();
+            int skipTime = 0;
             foreach (var p in pixels)
             {
-                //Log.Warn(col.ToString());
-                Vector3 pos = Location + p.Key;//new Vector3(p.Key.x * pixelSize, p.Key.y * pixelSize, 0);
+                Vector3 pos = Location + p.Key;
                 Vector3 newScale = (Vector3.one * pixelSize);
-                Primitive pixelPrimitive = Primitive.Create(PrimitiveType.Cube, position: pos, rotation: Rotation, scale: newScale); // todo add rotation!
-                UnityEngine.Color col = p.Value;
-                pixelPrimitive.Color = GetColorFromString(col.r + ":" + col.g + ":" + col.b + ":" + 255);  //ColorUtility.ToHtmlStringRGBA(col));
-                pixelPrimitive.Collidable = collide;
-                //primitives.Add(pixelPrimitive);
+                Primitive pixelPrimitive = Primitive.Create(PrimitiveType.Cube, position: pos, rotation: Rotation, scale: newScale, spawn:false);
+                pixelPrimitive.Color = GetColorFromString(p.Value.r + ":" + p.Value.g + ":" + p.Value.b + ":" + 255);
+                /*if (!collide) // screw this!
+                {
+                    //pixelPrimitive.Collidable = false;
+                    pixelPrimitive.Base.gameObject.GetComponentInParent<Collider>().enabled = false;
+                   // Vector3 scale = pixelPrimitive.Base.Scale;
+                   // pixelPrimitive.Base.transform.localScale = (pixelPrimitive.Collidable ? new Vector3(Math.Abs(scale.x), Math.Abs(scale.y), Math.Abs(scale.z)) : new Vector3(0f - Math.Abs(scale.x), 0f - Math.Abs(scale.y), 0f - Math.Abs(scale.z)));
+                }*/
+                pixelPrimitive.Spawn();
+                primitives.Add(pixelPrimitive);
                 spawnedPrimitives.Add(pixelPrimitive);
-                yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageSpawnPixelDelay);
+                skipTime++;
+                if (skipTime > Plugin.Instance.Config.ImageShowPixelAmount)
+                {
+                    skipTime =  0;
+                    yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageSpawnPixelDelay);
+                }
             }
-
+            SpawnedImage newImage = new SpawnedImage(Location, "test", primitives);
+            Room imageRoom = Room.Get(Location);
+            if (imageRoom != null && imageRoom.Type != Exiled.API.Enums.RoomType.Unknown)
+            {
+                newImage.room = Room.Get(Location);
+            }
+            spawnedImages.Add(newImage);
+            foreach (Player pl in Player.List)
+            {
+                if (!playerVisibleImages.ContainsKey(pl))
+                {
+                    playerVisibleImages[pl] = new List<SpawnedImage>();
+                }
+                if (!newImage.shouldCull(pl))
+                {
+                    playerVisibleImages[pl].Add(newImage);
+                }
+            }
+            
         }
 
         public void deleteAllImages()
@@ -211,11 +392,27 @@ namespace ImageAPI
                 Timing.KillCoroutines(handle);
             }
             imageSpawningCoroutines.Clear();
+            playerHidePrimitiveQueue.Clear();
+            playerShowPrimitiveQueue.Clear();
+            playerVisibleImages.Clear();
             foreach (Primitive p in spawnedPrimitives)
             {
                 p.Destroy();
             }
             spawnedPrimitives.Clear();
+            spawnedImages.Clear();
+        }
+
+        public void Initialise()
+        {
+            cullingCoroutineHandle = Timing.RunCoroutine(playerCullPrimitives());
+            cullingDoCoroutineHandle = Timing.RunCoroutine(playerPrimitiveVisiblity());
+        }
+        public void DeInitialise()
+        {
+            Timing.KillCoroutines(cullingCoroutineHandle);
+            Timing.KillCoroutines(cullingDoCoroutineHandle);
+            deleteAllImages();
         }
         private string UrlToFileName(string dangerousURL)
         {

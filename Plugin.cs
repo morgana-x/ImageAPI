@@ -16,7 +16,7 @@ namespace ImageAPI
 
         private EventHandlers _handlers;
 
-        public Image _imageApi;
+        public ImageAPI _imageApi;
 
         public override void OnEnabled()
         {
@@ -47,13 +47,14 @@ namespace ImageAPI
         private void RegisterEvents()
         {
             _handlers = new EventHandlers();
-            _imageApi = new Image();
+            _imageApi = new ImageAPI();
+            _imageApi.Initialise();
         }
 
         private void UnregisterEvents()
         {
             _handlers = null;
-            _imageApi.deleteAllImages();
+            _imageApi.DeInitialise();
             _imageApi = null;
         }
     }
