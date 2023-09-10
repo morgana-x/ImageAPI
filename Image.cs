@@ -180,6 +180,7 @@ namespace ImageAPI
         {
             while (true)
             {
+                bool nothingDone = true;
                 foreach (Player pl in Player.List)
                 {
                     if (!playerHidePrimitiveQueue.ContainsKey(pl))
@@ -201,6 +202,7 @@ namespace ImageAPI
                             showPrimitive(pl, showPrimitiveThing);
                             playerShowPrimitiveQueue[pl].Remove(showPrimitiveThing);
                         }
+                        nothingDone = false;
                     }
                     if (playerHidePrimitiveQueue[pl].Count >0)
                     {
@@ -212,11 +214,15 @@ namespace ImageAPI
                             hidePrimitive(pl, hidePrimitiveThing);
                             playerHidePrimitiveQueue[pl].Remove(hidePrimitiveThing);
                         }
+                        nothingDone = false;
                     }
 
                 
                 }
-                yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageSpawnPixelDelay);
+                if (!nothingDone)
+                    yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageSpawnPixelDelay);
+                else
+                    yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageCullingDelay);
             }
         }
         public static UnityEngine.Color GetColorFromString(string colorText)
