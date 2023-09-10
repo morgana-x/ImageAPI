@@ -12,6 +12,7 @@ A work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
 # Todo
 + Allow for images to be spawned on round start from config
 + Support for creating images with bullet holes (maybe)
++ Somehow fix players glitching into the ground because of the sheer amount of collision checks when you attempt to go inside it
 
 # Commands
 ## image
@@ -29,3 +30,4 @@ A work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
 
 ![Screenshot (4215)](https://github.com/morgana-x/ImageAPI/assets/89588301/9d47ca01-fac5-4bbb-b8cd-06ffb6292219)
 ![Screenshot (4217)](https://github.com/morgana-x/ImageAPI/assets/89588301/b5e86399-9b5a-486f-b7bb-6300b6203c58)
+![Screenshot (4218)](https://github.com/morgana-x/ImageAPI/assets/89588301/94233fd0-be3b-453c-9eb7-67cc213d2ebe)
