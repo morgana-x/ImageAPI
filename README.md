@@ -1,6 +1,6 @@
 # ImageAPI  ![Downloads](https://img.shields.io/github/downloads/morgana-x/ImageAPI/total)
 A work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
-## This is not fully optimised and will most likely lag the server if your not careful
+## This is not fully optimised (aka poorly made typically at 2am) and will most likely lag the server if your not careful
 ## This is more of a for fun plugin rather than a practical and applicable plugin on your server, maybe a different version using decals could be made which will decrease the amount of lag on client and server (Except it will probably be monochrome)
 # Features
 + Image downscaling
