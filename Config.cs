@@ -35,6 +35,9 @@ namespace ImageAPI
         [Description("How many pixels at a time will an image spawn")]
         public int ImageShowPixelAmount { get; set; } = 6;
 
+        [Description("Extreme optimisation flag")]
+        public bool ExtremeOptimisation { get; set; } = true;
+
         /*public Dictionary<string, KeyValuePair<Vector3, Vector3>> SavedImageSpawns { get; set;} = new Dictionary<string, KeyValuePair<Vector3, Transform>>()
         {
             ["neko.png"] = new KeyValuePair<Vector3, Vector3>(Vector3.back, )

@@ -122,9 +122,9 @@ namespace ImageAPI
                     {
                         playerShowPrimitiveQueue.Add(pl, new List<Primitive>());
                     }
-                    if (!playerShowPrimitiveQueue.ContainsKey(pl))
+                    if (!playerHidePrimitiveQueue.ContainsKey(pl))
                     {
-                        playerShowPrimitiveQueue.Add(pl, new List<Primitive>());
+                        playerHidePrimitiveQueue.Add(pl, new List<Primitive>());
                     }
                     foreach (SpawnedImage b in spawnedImages)
                     {
@@ -171,6 +171,10 @@ namespace ImageAPI
                         playerHidePrimitiveQueue[pl] = playerHidePrimitiveQueue[pl].Except(b.Primitives).ToList();
                         Log.Debug("Showing " + b.Id + " for " + pl.DisplayNickname);
                         playerVisibleImages[pl].Add(b);
+                        if (Plugin.Instance.Config.ExtremeOptimisation)
+                        {
+                            yield return Timing.WaitForOneFrame;
+                        }
                     }
                 }
                 yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageCullingDelay);
@@ -203,6 +207,10 @@ namespace ImageAPI
                             playerShowPrimitiveQueue[pl].Remove(showPrimitiveThing);
                         }
                         nothingDone = false;
+                        if (Plugin.Instance.Config.ExtremeOptimisation)
+                        {
+                            yield return Timing.WaitForOneFrame;
+                        }
                     }
                     if (playerHidePrimitiveQueue[pl].Count >0)
                     {
@@ -216,7 +224,6 @@ namespace ImageAPI
                         }
                         nothingDone = false;
                     }
-
                 
                 }
                 if (!nothingDone)
@@ -338,13 +345,20 @@ namespace ImageAPI
             {
                 Rotation = rotationTransform.rotation.eulerAngles;
             }
-            CoroutineHandle handle = Timing.RunCoroutine(spawnImagePrimitives(pixels, Location, Rotation, pixelSize, collide));
+            /*Vector3 fixCollidingIntoHellScale = ((Vector3.right * img.Width * pixelSize) + (Vector3.up * img.Height * pixelSize) + (Vector3.forward * pixelSize * 10f)) * 1.6f;  //((rotationTransform.right * img.Width * pixelSize) + (rotationTransform.up * img.Height * pixelSize) + (rotationTransform.forward *pixelSize));
+            Primitive fixCollidingIntoHell = Primitive.Create(PrimitiveType.Cube, position: Location, Rotation, scale: fixCollidingIntoHellScale, spawn: false);
+            fixCollidingIntoHell.Color = new UnityEngine.Color(0, 0, 0, 0);
+            fixCollidingIntoHell.Spawn();
+            spawnedPrimitives.Add(fixCollidingIntoHell);*/
+            Vector3 finishPosition = (rotationTransform.right * img.Width * pixelSize) + (rotationTransform.up * -img.Height * 0.5f * pixelSize);
+            CoroutineHandle handle = Timing.RunCoroutine(spawnImagePrimitives(pixels, Location - (finishPosition/2), Rotation, pixelSize, collide));
             imageSpawningCoroutines.Add(handle);
             Log.Debug("Started coroutine");
             
         }
         private IEnumerator<float> spawnImagePrimitives(Dictionary<Vector3, UnityEngine.Color> pixels, Vector3 Location, Vector3 Rotation, float pixelSize = 0.1f, bool collide = false)
         {
+
             List<Primitive> primitives = new List<Primitive>();
             int skipTime = 0;
             foreach (var p in pixels)
@@ -370,6 +384,7 @@ namespace ImageAPI
                     yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageSpawnPixelDelay);
                 }
             }
+
             SpawnedImage newImage = new SpawnedImage(Location, "test", primitives);
             Room imageRoom = Room.Get(Location);
             if (imageRoom != null && imageRoom.Type != Exiled.API.Enums.RoomType.Unknown)
