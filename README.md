@@ -14,6 +14,7 @@ A work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
 + Allow for images to be spawned on round start from config
 + Support for creating images with bullet holes (maybe)
 + Somehow fix players glitching into the ground because of the sheer amount of collision checks when you attempt to go inside it
++ Remove collider for primitives serverside so the above issue atleast doesnt lag the server
 
 # Commands
 ## image
