@@ -445,12 +445,14 @@ namespace ImageAPI
         {
             cullingCoroutineHandle = Timing.RunCoroutine(playerCullPrimitives());
             cullingDoCoroutineHandle = Timing.RunCoroutine(playerPrimitiveVisiblity());
+            Log.Info("Initialised");
         }
         public void DeInitialise()
         {
             Timing.KillCoroutines(cullingCoroutineHandle);
             Timing.KillCoroutines(cullingDoCoroutineHandle);
             deleteAllImages();
+            Log.Info("Deinitalised");
         }
         private string UrlToFileName(string dangerousURL)
         {
