@@ -12,7 +12,7 @@ A work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
 # Todo
 + Allow for images to be spawned on round start from config
 + Support for creating images with bullet holes (maybe)
-
++ Fix falling into ground glitch and serverside collider.... again (Just make the base's spawnedPrimitive public silly exiled :( )
 # Commands
 ## image
 + arguments: (string) filename (including .png on end etc)
