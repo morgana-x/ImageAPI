@@ -1,7 +1,6 @@
 # ImageAPI  ![Downloads](https://img.shields.io/github/downloads/morgana-x/ImageAPI/total)
 A work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
-## This is not fully optimised (aka poorly made typically at 2am) and will most likely lag the server if your not careful
-## This is more of a fun plugin rather than a practical and applicable plugin on your server - Mostly due to the potentiol issues of lag and that whole falling into floor when walking into image glitch - Aka only use it for mucking around on a quiet server or something
+## This is not fully optimised (aka poorly made typically at 2am), consider if this is actually needed on your server, unless you want to muck around on a quiet one or something
 # Features
 + Image downscaling
 + Downloading from URLs
@@ -13,8 +12,6 @@ A work-in-progress Exiled plugin that allows you to spawn images in SCP SL.
 # Todo
 + Allow for images to be spawned on round start from config
 + Support for creating images with bullet holes (maybe)
-+ Somehow fix players glitching into the ground because of the sheer amount of collision checks when you attempt to go inside it
-+ Remove collider for primitives serverside so the above issue atleast doesnt lag the server
 
 # Commands
 ## image
