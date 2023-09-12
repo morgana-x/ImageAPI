@@ -49,10 +49,15 @@ namespace ImageAPI
             _handlers = new EventHandlers();
             _imageApi = new ImageAPI();
             _imageApi.Initialise();
+            Exiled.Events.Handlers.Server.RoundEnded += _handlers.RoundEnded;
+            Exiled.Events.Handlers.Server.RestartingRound += _handlers.RoundRestarting;
         }
 
         private void UnregisterEvents()
         {
+
+            Exiled.Events.Handlers.Server.RoundEnded -= _handlers.RoundEnded;
+            Exiled.Events.Handlers.Server.RestartingRound -= _handlers.RoundRestarting;
             _handlers = null;
             _imageApi.DeInitialise();
             _imageApi = null;
