@@ -374,7 +374,24 @@ namespace ImageAPI
                    // Vector3 scale = pixelPrimitive.Base.Scale;
                    // pixelPrimitive.Base.transform.localScale = (pixelPrimitive.Collidable ? new Vector3(Math.Abs(scale.x), Math.Abs(scale.y), Math.Abs(scale.z)) : new Vector3(0f - Math.Abs(scale.x), 0f - Math.Abs(scale.y), 0f - Math.Abs(scale.z)));
                 }*/
+                /* MeshCollider uselessColliderGrr = pixelPrimitive.Base.GetComponent<MeshCollider>();
+
+                 if (uselessColliderGrr != null)
+                 {
+                     Log.Debug("Destroying useless collider!");
+                     UnityEngine.Object.Destroy(uselessColliderGrr);
+                 }
+                 Collider uselessCollider2GRRARR = pixelPrimitive.Base.GetComponent<Collider>();
+                 if (uselessCollider2GRRARR != null)
+                 {
+                     Log.Debug("Destroying useless collider 2!");
+                     UnityEngine.Object.Destroy(uselessCollider2GRRARR);
+                 }*/
+                // Transform gameObjectsTransform = pixelPrimitive.Base.transform.GetChild(0);
+                //gameObjectsTransform.
+                pixelPrimitive.Scale = Vector3.zero;
                 pixelPrimitive.Spawn();
+                pixelPrimitive.Scale = newScale;
                 primitives.Add(pixelPrimitive);
                 spawnedPrimitives.Add(pixelPrimitive);
                 skipTime++;
