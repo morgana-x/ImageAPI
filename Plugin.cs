@@ -48,9 +48,10 @@ namespace ImageAPI
         {
             _handlers = new EventHandlers();
             _imageApi = new ImageAPI();
-            _imageApi.Initialise();
+            //_imageApi.Initialise();
             Exiled.Events.Handlers.Server.RoundEnded += _handlers.RoundEnded;
             Exiled.Events.Handlers.Server.RestartingRound += _handlers.RoundRestarting;
+            Exiled.Events.Handlers.Server.WaitingForPlayers+= _handlers.WaitingForPlayers;
         }
 
         private void UnregisterEvents()
@@ -58,8 +59,9 @@ namespace ImageAPI
 
             Exiled.Events.Handlers.Server.RoundEnded -= _handlers.RoundEnded;
             Exiled.Events.Handlers.Server.RestartingRound -= _handlers.RoundRestarting;
+            Exiled.Events.Handlers.Server.WaitingForPlayers -= _handlers.WaitingForPlayers;
             _handlers = null;
-            _imageApi.DeInitialise();
+            //_imageApi.DeInitialise();
             _imageApi = null;
         }
     }

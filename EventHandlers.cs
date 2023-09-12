@@ -7,11 +7,16 @@ namespace ImageAPI
     {
         public void RoundEnded(RoundEndedEventArgs ev)
         {
-            Plugin.Instance._imageApi.deleteAllImages();
+            Plugin.Instance._imageApi.DeInitialise();
         }
         public void RoundRestarting()
         {
-            Plugin.Instance._imageApi.deleteAllImages();
+            Plugin.Instance._imageApi.DeInitialise();
+        }
+        public void WaitingForPlayers()
+        {
+            Plugin.Instance._imageApi.DeInitialise();
+            Plugin.Instance._imageApi.Initialise();
         }
         
     }
