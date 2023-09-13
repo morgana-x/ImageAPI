@@ -6,15 +6,17 @@ using System.Threading.Tasks;
 using Exiled.API.Features;
 using Exiled.API;
 using Exiled.API.Features.Toys;
-using System.Drawing;
 using System.IO;
 using UnityEngine;
 using MEC;
-using System.Drawing.Imaging;
 using System.Net;
+using System.Net.Http;
 using System.Security.Policy;
+using System.Drawing;
 using Mirror;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace ImageAPI
 {
@@ -61,21 +63,12 @@ namespace ImageAPI
         public Dictionary<Player, List<Primitive>> playerHidePrimitiveQueue = new Dictionary<Player, List<Primitive>>();
         public string getImageFolder()
         {
-            return Plugin.Instance.ConfigPath.Replace("7777.yml", string.Empty) + @"\image";
+            return Plugin.Instance.ConfigPath.Replace(Server.Port + ".yml", string.Empty);// + @"\image";
         }
         public string getImagePath(string file)
         {
-            return getImageFolder() + @"\" + file;
+            return getImageFolder() + file;
         }
-        /*public void hidePrimitives(Player pl, List<Primitive> primitives)
-        {
-            NetworkConnection connection = pl.Connection;
-            foreach (Primitive p in primitives)
-            {
-                connection.Send(new ObjectDestroyMessage
-                { netId = p.Base.netIdentity.netId });
-            }
-        }*/
         public void hidePrimitive(Player pl, Primitive primitive)
         {
             pl.Connection.Send(new ObjectDestroyMessage
@@ -85,29 +78,6 @@ namespace ImageAPI
         {
             Server.SendSpawnMessage.Invoke(null, new object[] { primitive.Base.netIdentity, player.Connection });
         }
-        //public IEnumerator<float> showPrimitives(Player pl, List<Primitive> primitives)
-        /*public void showPrimitives(Player pl, List<Primitive> primitives)
-        {
-            NetworkConnection connection = pl.Connection;
-            foreach (Primitive p in primitives)
-            {
-                Server.SendSpawnMessage.Invoke(null, new object[] { p.Base.netIdentity, connection });
-               // yield return Timing.WaitForSeconds(Plugin.Instance.Config.ImageSpawnPixelDelay);
-            }
-        }*/
-        /*public bool isCulled(Player pl, SpawnedImage img)
-        {
-            if (!playerVisibleImages.ContainsKey(pl))
-            {
-                return true;
-            }
-            List<SpawnedImage> visibleImages = playerVisibleImages[pl];
-            if (visibleImages.Contains(img))
-            {
-                return false;
-            }
-            return true;
-        }*/
         private IEnumerator<float> playerCullPrimitives() 
         {
             while (true)
@@ -130,12 +100,6 @@ namespace ImageAPI
                     {
                         if ( (( playerVisibleImages[pl].Contains(b))) && b.shouldCull(pl))
                         {
-                            /*if (playerCullingHandle.ContainsKey(pl))
-                            {
-                                Timing.KillCoroutines(playerCullingHandle[pl]);
-                                playerCullingHandle.Remove(pl);
-                            }*/
-                           // hidePrimitives(pl, b.Primitives);
                             if ( playerVisibleImages[pl].Contains(b))
                             {
                                 playerVisibleImages[pl].Remove(b);
@@ -147,16 +111,6 @@ namespace ImageAPI
                             continue;
                         }
 
-                        /*CoroutineHandle cullhandle = Timing.RunCoroutine(showPrimitives(pl, b.Primitives));
-                        if (!playerCullingHandle.ContainsKey(pl))
-                        {
-                            playerCullingHandle.Add(pl, cullhandle);
-                        }
-                        else
-                        {
-                            Timing.KillCoroutines(playerCullingHandle[pl]);
-                            playerCullingHandle[pl] = cullhandle;
-                        }*/
                         if (playerVisibleImages[pl].Contains(b))
                         {
                             continue;
@@ -259,7 +213,7 @@ namespace ImageAPI
 
             return ColorUtility.TryParseHtmlString(colorText, out color) ? color : UnityEngine.Color.magenta * 3f;
         }
-        SizeF ConstrainVerbose(int imageWidth, int imageHeight, int maxWidth, int maxHeight) //https://stackoverflow.com/questions/5222711/image-resize-in-c-sharp-algorith-to-determine-resize-dimensions-height-and-wi
+        Vector2 ConstrainVerbose(int imageWidth, int imageHeight, int maxWidth, int maxHeight) //https://stackoverflow.com/questions/5222711/image-resize-in-c-sharp-algorith-to-determine-resize-dimensions-height-and-wi
         {
             // Coalculate the aspect ratios of the image and bounding box
             var maxAspect = (float)maxWidth / (float)maxHeight;
@@ -268,21 +222,25 @@ namespace ImageAPI
             if (maxAspect <= aspect && imageWidth > maxWidth)
             {
                 // Use the width bound and calculate the height
-                return new SizeF(maxWidth, Math.Min(maxHeight, maxWidth / aspect));
+                return new Vector2(maxWidth, Math.Min(maxHeight, maxWidth / aspect));
             }
             else if (maxAspect > aspect && imageHeight > maxHeight)
             {
                 // Use the height bound and calculate the width
-                return new SizeF(Math.Min(maxWidth, maxHeight * aspect), maxHeight);
+                return new Vector2(Math.Min(maxWidth, maxHeight * aspect), maxHeight);
             }
             else
             {
-                return new SizeF(imageWidth, imageHeight);
+                return new Vector2(imageWidth, imageHeight);
             }
         }
+    
         public void spawnImage(string file, Vector3 Location, Transform rotationTransform = null, float pixelSize = 0.1f, bool collide = false, int maxSize = 255)
         {
             Log.Debug( "Spawning " + file);
+
+
+
             string imageFolder = getImageFolder();
             string imagePath = getImagePath(file);
             Log.Debug(imageFolder);
@@ -296,37 +254,35 @@ namespace ImageAPI
                 Log.Debug(imagePath + " does not exist!");
                 return;
             }
+
+
             Dictionary<Vector3, UnityEngine.Color> pixels= new Dictionary<Vector3, UnityEngine.Color>();
-            Bitmap img = new Bitmap(imagePath);
+
+
+            Bitmap img = new Bitmap(imagePath); 
+            //var rawData = System.IO.File.ReadAllBytes(imagePath);
+            //Texture2D img = new Texture2D(2, 2); // Create an empty Texture; size doesn't matter
+            //img.LoadImage(rawData, false);
+            
             if (img == null)
             {
                 Log.Warn("Null image! Aborting spawning.");
                 return;
             }
-            /*float imgSize = img.Width * img.Height;
-            if ((imgSize) > (Plugin.Instance.Config.ImageMaxWidth * Plugin.Instance.Config.ImageMaxHeight)) // Todo: fix rescaling system
-            {
-                Log.Debug("Image too large (" + imgSize.ToString() + "/" + maxSize.ToString() +  "), compressing...");
-                float scaleDown = (float)maxSize / (float)imgSize;
-                Log.Debug("Scaledown: " + scaleDown.ToString());
-                Log.Debug("Image width:" + img.Width);
-                float newWidth = ((maxSize / img.Height) / (float)img.Width); //( scaleDown / img.Width); // REMEMBER TO REVERT THIS LATER
-                Log.Debug("New Image width: " + newWidth.ToString());
-                Log.Debug("Image height:" + img.Height);
-                float newHeight = ((maxSize ) / (float)img.Height);
-                Log.Debug("New Image height: " + newWidth.ToString());
-                Log.Debug("New image size: " +  (newWidth * newHeight).ToString());
-                //Log.Warn(newHeight);
-                //Log.Warn(newWidth.ToString() + " / " + newHeight.ToString());
-                Size newSize = ResizeFit(img.Size, new Size(Plugin.Instance.Config.ImageMaxWidth, Plugin.Instance.Config.ImageMaxHeight));
-                img = new Bitmap(img, newSize); // (int)newHeight, (int)newWidth);
-            }*/
-            Size newSize = ConstrainVerbose(img.Width, img.Height, Plugin.Instance.Config.ImageMaxWidth, Plugin.Instance.Config.ImageMaxHeight).ToSize();
+
+
+            Vector2 newSize = ConstrainVerbose(img.Width, img.Height, Plugin.Instance.Config.ImageMaxWidth, Plugin.Instance.Config.ImageMaxHeight);//ConstrainVerbose(img.Width, img.Height, Plugin.Instance.Config.ImageMaxWidth, Plugin.Instance.Config.ImageMaxHeight).ToSize();
+
+
             Log.Debug("New size: " + newSize.ToString());
-            img = new Bitmap(img, newSize);
+
+            img = new Bitmap(img, (int)newSize.x, (int)newSize.y);
+
             for (int x = 0; x < img.Width; x++)
+            //for (int x = 0; x < img.width; x++)
             {
-                for (int y = 0; y < img.Height; y++)
+                 for (int y = 0; y < img.Height; y++)
+                //for (int y = 0; y < img.height; y++)
                 {
                     System.Drawing.Color pixel = img.GetPixel(x, y);
                     UnityEngine.Color unityColor = new UnityEngine.Color( pixel.R, pixel.G, pixel.B);
@@ -345,11 +301,7 @@ namespace ImageAPI
             {
                 Rotation = rotationTransform.rotation.eulerAngles;
             }
-            /*Vector3 fixCollidingIntoHellScale = ((Vector3.right * img.Width * pixelSize) + (Vector3.up * img.Height * pixelSize) + (Vector3.forward * pixelSize * 10f)) * 1.6f;  //((rotationTransform.right * img.Width * pixelSize) + (rotationTransform.up * img.Height * pixelSize) + (rotationTransform.forward *pixelSize));
-            Primitive fixCollidingIntoHell = Primitive.Create(PrimitiveType.Cube, position: Location, Rotation, scale: fixCollidingIntoHellScale, spawn: false);
-            fixCollidingIntoHell.Color = new UnityEngine.Color(0, 0, 0, 0);
-            fixCollidingIntoHell.Spawn();
-            spawnedPrimitives.Add(fixCollidingIntoHell);*/
+
             Vector3 finishPosition = (rotationTransform.right * img.Width * pixelSize) + (rotationTransform.up * -img.Height * 0.5f * pixelSize);
             CoroutineHandle handle = Timing.RunCoroutine(spawnImagePrimitives(pixels, Location - (finishPosition/2), Rotation, pixelSize, collide));
             imageSpawningCoroutines.Add(handle);
@@ -367,28 +319,6 @@ namespace ImageAPI
                 Vector3 newScale = (Vector3.one * pixelSize);
                 Primitive pixelPrimitive = Primitive.Create(PrimitiveType.Cube, position: pos, rotation: Rotation, scale: newScale, spawn:false);
                 pixelPrimitive.Color = GetColorFromString(p.Value.r + ":" + p.Value.g + ":" + p.Value.b + ":" + 255);
-                /*if (!collide) // screw this!
-                {
-                    //pixelPrimitive.Collidable = false;
-                    pixelPrimitive.Base.gameObject.GetComponentInParent<Collider>().enabled = false;
-                   // Vector3 scale = pixelPrimitive.Base.Scale;
-                   // pixelPrimitive.Base.transform.localScale = (pixelPrimitive.Collidable ? new Vector3(Math.Abs(scale.x), Math.Abs(scale.y), Math.Abs(scale.z)) : new Vector3(0f - Math.Abs(scale.x), 0f - Math.Abs(scale.y), 0f - Math.Abs(scale.z)));
-                }*/
-                /* MeshCollider uselessColliderGrr = pixelPrimitive.Base.GetComponent<MeshCollider>();
-
-                 if (uselessColliderGrr != null)
-                 {
-                     Log.Debug("Destroying useless collider!");
-                     UnityEngine.Object.Destroy(uselessColliderGrr);
-                 }
-                 Collider uselessCollider2GRRARR = pixelPrimitive.Base.GetComponent<Collider>();
-                 if (uselessCollider2GRRARR != null)
-                 {
-                     Log.Debug("Destroying useless collider 2!");
-                     UnityEngine.Object.Destroy(uselessCollider2GRRARR);
-                 }*/
-                // Transform gameObjectsTransform = pixelPrimitive.Base.transform.GetChild(0);
-                //gameObjectsTransform.
                 pixelPrimitive.Scale = Vector3.zero;
                 pixelPrimitive.Spawn();
                 pixelPrimitive.Scale = newScale;
@@ -458,40 +388,44 @@ namespace ImageAPI
         {
             return dangerousURL.Replace("http", string.Empty).Replace("www.", string.Empty).Replace(".", string.Empty).Replace("/", string.Empty).Replace(":", string.Empty).Replace(@"\", string.Empty);
         }
-        public void downloadImage(string url, Action<string> callBack = null) // https://stackoverflow.com/questions/24797485/how-to-download-image-from-url :(
+        public static bool IsImage(Stream stream)
         {
-            string fileName = UrlToFileName(url);
-            string imgPath = getImagePath(fileName) + ".png";
-            if (File.Exists(imgPath))
-            {
-                if (callBack != null)
-                    callBack(fileName + ".png");
-                Log.Debug("file already exists!");
-                return;
-            }
-            using (WebClient webClient = new WebClient())
-            {
-                byte[] data = webClient.DownloadData(url);
+            stream.Seek(0, SeekOrigin.Begin);
 
-                using (MemoryStream mem = new MemoryStream(data))
+            List<string> jpg = new List<string> { "FF", "D8" };
+            List<string> bmp = new List<string> { "42", "4D" };
+            List<string> gif = new List<string> { "47", "49", "46" };
+            List<string> png = new List<string> { "89", "50", "4E", "47", "0D", "0A", "1A", "0A" };
+            List<List<string>> imgTypes = new List<List<string>> { jpg, bmp, gif, png };
+
+            List<string> bytesIterated = new List<string>();
+
+            for (int i = 0; i < 8; i++)
+            {
+                string bit = stream.ReadByte().ToString("X2");
+                bytesIterated.Add(bit);
+
+                bool isImage = imgTypes.Any(img => !img.Except(bytesIterated).Any());
+                if (isImage)
                 {
-                    using (var downloadedImage = System.Drawing.Image.FromStream(mem))
-                    {
-                        // If you want it as Png
-                        downloadedImage.Save(imgPath, ImageFormat.Png);
-                        if (callBack != null)
-                            callBack(fileName + ".png");
-                    }
+                    return true;
                 }
-
             }
+
+            return false;
         }
-        public void downloadImagePosition(string url, Vector3 pos, Transform rotationTransform = null, Action<string, Vector3, Transform> callBack = null) // https://stackoverflow.com/questions/24797485/how-to-download-image-from-url :(
+        public async void downloadImagePosition(string url, Vector3 pos, Transform rotationTransform = null, Action<string, Vector3, Transform> callBack = null) // https://stackoverflow.com/questions/24797485/how-to-download-image-from-url :(
         {
             string fileName = UrlToFileName(url);
             string imgPath = getImagePath(fileName) + ".png";
             if (File.Exists(imgPath))
             {
+                FileStream checkFile = File.OpenRead(imgPath);
+                if (checkFile != null && !IsImage(checkFile))
+                {
+                    Log.Debug("Invalid image!");
+                    return;
+                }
                 if (callBack != null)
                     callBack(fileName + ".png", pos, rotationTransform);
                 Log.Debug("file already exists!");
@@ -503,13 +437,35 @@ namespace ImageAPI
 
                 using (MemoryStream mem = new MemoryStream(data))
                 {
-                    using (var downloadedImage = System.Drawing.Image.FromStream(mem))
+                    File.WriteAllBytes(imgPath, mem.ToArray());
+                    while (!File.Exists(imgPath))
+                    { }
+                    FileStream checkFile = File.OpenRead(imgPath);
+                    if (checkFile != null && IsImage(checkFile))
                     {
-                        // If you want it as Png
-                        downloadedImage.Save(imgPath, ImageFormat.Png);
                         if (callBack != null)
                             callBack(fileName + ".png", pos, rotationTransform);
                     }
+                    else
+                    {
+                        try
+                        {
+                            File.Delete(imgPath);
+                        }
+                        catch(Exception e) 
+                        {
+                            Log.Debug(e.ToString());
+                        }
+                        Log.Debug("Invalid Image!");
+                    }
+                    checkFile.Dispose();
+                    checkFile.Close();
+                    // cant use System.Drawing.Image because SCP SL is missing the GDI something dll library that it relies on when on linux
+                    //using (var downloadedImage = System.Drawing.Image.FromStream(mem))
+                    //{
+                    // If you want it as Png
+                     //downloadedImage.Save(imgPath, ImageFormat.Png);
+                   // }
                 }
 
             }
